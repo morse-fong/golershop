@@ -1368,7 +1368,7 @@ func (s *sOrder) SetPaidYes(ctx context.Context, orderId string) (flag bool, err
 		for _, item := range orderItemList {
 			// start 判断增加冻结库存
 			if item.OrderItemInventoryLock == 1002 {
-				if affected, err := service.ProductItem().LockSkuStock(ctx, item.ItemId, item.OrderItemQuantity); affected == 0 || err == nil {
+				if affected, err := service.ProductItem().LockSkuStock(ctx, item.ItemId, item.OrderItemQuantity); affected == 0 || err != nil {
 					format := fmt.Sprintf("更改: %d 冻结库存失败!", item.ItemId)
 					service.LogError().Error(ctx, format, consts.ERR_NOT_DEFINITION)
 
