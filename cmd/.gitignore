@@ -1,0 +1,4 @@
+redis/data/
+mysql/data/
+kafka_data/
+zookeeper_data/

@@ -682,7 +682,7 @@ func (s *sUserResource) Money(ctx context.Context, vo *model.MoneyVo) (bool, err
 	money := vo.RecordTotal
 	tradeTypeDeposit := vo.TradeTypeDeposit
 	date := gtime.Now()
-	curTime := gtime.New(date.Format("yyyy-MM-dd"))
+	curTime := gtime.New(date.Format("2006-01-02"))
 
 	consumeRecordRow := &do.ConsumeRecord{
 		OrderId:      vo.OrderId,
