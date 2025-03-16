@@ -3,6 +3,7 @@ package snowflake
 import (
 	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -31,29 +32,33 @@ func New(mid int64) (*Generator, error) {
 }
 
 func (g *Generator) GenID() (int64, error) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-
 	now := time.Now().UnixNano()/1e6 - epoch
 
-	if now < g.lastTime {
-		return 0, ErrClockBackward
-	}
+	for {
+		oldLast := atomic.LoadInt64(&g.lastTime)
+		seq := atomic.LoadInt64(&g.sequence)
 
-	if now == g.lastTime {
-		g.sequence = (g.sequence + 1) & maxSequence
-		if g.sequence == 0 {
-			now = g.waitNextMs()
+		if now < oldLast {
+			return 0, ErrClockBackward
 		}
-	} else {
-		g.sequence = 0
+
+		if now == oldLast {
+			newSeq := (seq + 1) & maxSequence
+			if newSeq == 0 {
+				now = g.waitNextMs()
+				continue
+			}
+			if atomic.CompareAndSwapInt64(&g.sequence, seq, newSeq) {
+				break
+			}
+		} else {
+			if atomic.CompareAndSwapInt64(&g.lastTime, oldLast, now) {
+				atomic.StoreInt64(&g.sequence, 0)
+			}
+		}
 	}
 
-	g.lastTime = now
-
-	return (now << timeShift) |
-		(g.machineID << machineShift) |
-		g.sequence, nil
+	return (now << timeShift) | (g.machineID << machineShift) | atomic.LoadInt64(&g.sequence), nil
 }
 
 func (g *Generator) waitNextMs() int64 {
