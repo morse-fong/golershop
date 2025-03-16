@@ -85,5 +85,6 @@ gfcli:
         jsonCase: "Snake"
         gJsonSupport: true
         overwriteDao: true
-
+snowflake:
+  machine_id: 1 # 0-1023
 

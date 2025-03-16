@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/grpool"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -39,8 +40,10 @@ import (
 	"golershop.cn/internal/model/do"
 	"golershop.cn/internal/model/entity"
 	"golershop.cn/internal/service"
+	"golershop.cn/utility"
 	"golershop.cn/utility/array"
 	"math"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -497,10 +500,17 @@ func (s *sOrder) addOrder(ctx context.Context, cartData *model.CheckoutOutput) (
 	}
 
 	//订单编号每次新取
-	orderId, err := service.NumberSeq().GetNextSeqString(ctx, fmt.Sprintf("JD-%s-", now.Format("Ymd")))
+	//orderId, err := service.NumberSeq().GetNextSeqString(ctx, fmt.Sprintf("JD-%s-", now.Format("Ymd")))
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	// 使用雪花算法生成订单编号
+	orderIdInt, err := utility.SF.GenID()
 	if err != nil {
-		return nil, err
+		return nil, gerror.Wrap(err, "订单编号生成失败")
 	}
+	orderId := fmt.Sprintf("JD-%s", strconv.FormatInt(orderIdInt, 10))
 
 	//开启事务
 	err = dao.OrderBase.Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {

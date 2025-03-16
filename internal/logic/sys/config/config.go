@@ -653,6 +653,11 @@ func (s *sConfigBase) Init(ctx context.Context) (res bool, err error) {
 	fmt.Println("初始化清理缓存....")
 	s.CleanCache(ctx)
 
+	//初始化雪花算法
+	if err := utility.InitSnowflake(ctx); err != nil {
+		return false, err
+	}
+
 	//初始化  initOrderProcess
 	_, err = s.initOrderProcess(ctx)
 	if err != nil {

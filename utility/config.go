@@ -3,7 +3,21 @@ package utility
 import (
 	"context"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/util/gconv"
+	"golershop.cn/utility/snowflake"
 )
+
+var SF *snowflake.Generator
+
+func InitSnowflake(ctx context.Context) error {
+	mid, _ := g.Cfg().Get(ctx, "snowflake.machine_id")
+	var err error
+	if SF, err = snowflake.New(gconv.Int64(mid)); err != nil {
+		g.Log().Fatalf(ctx, "雪花算法初始化失败: %v", err)
+	}
+
+	return err
+}
 
 func UrlBase(ctx context.Context) string {
 	// 附件存储路径
