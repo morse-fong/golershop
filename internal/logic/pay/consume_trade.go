@@ -119,25 +119,25 @@ func (s *sConsumeTrade) ProcessPay(ctx context.Context, ids string, deposit mode
 			orderId := trade.OrderId
 
 			//写入充值流水
-			record := do.ConsumeRecord{}
-			record.OrderId = trade.OrderId
-			record.UserId = trade.BuyerId
-			record.UserNickname = ""
-			record.StoreId = trade.BuyerStoreId
-			record.ChainId = 0
-			record.RecordTotal = depositTotalFee
-			record.RecordMoney = depositTotalFee
-			record.RecordDate = now
-			record.RecordYear = now.Format("Y")
-			record.RecordMonth = now.Format("n")
-			record.RecordDay = now.Format("j")
-			record.RecordTitle = trade.TradeTitle
-			record.RecordDesc = trade.TradeDesc
-			record.RecordTime = now.UnixMilli()
-			record.TradeTypeId = consts.TRADE_TYPE_DEPOSIT
-			record.PaymentMetId = consts.PAYMENT_MET_MONEY
-			record.PaymentTypeId = deposit.PaymentTypeId
-			record.PaymentChannelId = deposit.PaymentChannelId
+			//record := do.ConsumeRecord{}
+			//record.OrderId = trade.OrderId
+			//record.UserId = trade.BuyerId
+			//record.UserNickname = ""
+			//record.StoreId = trade.BuyerStoreId
+			//record.ChainId = 0
+			//record.RecordTotal = depositTotalFee
+			//record.RecordMoney = depositTotalFee
+			//record.RecordDate = now
+			//record.RecordYear = now.Format("Y")
+			//record.RecordMonth = now.Format("n")
+			//record.RecordDay = now.Format("j")
+			//record.RecordTitle = trade.TradeTitle
+			//record.RecordDesc = trade.TradeDesc
+			//record.RecordTime = now.UnixMilli()
+			//record.TradeTypeId = consts.TRADE_TYPE_DEPOSIT
+			//record.PaymentMetId = consts.PAYMENT_MET_MONEY
+			//record.PaymentTypeId = deposit.PaymentTypeId
+			//record.PaymentChannelId = deposit.PaymentChannelId
 
 			var tradeData do.ConsumeTrade
 
@@ -157,23 +157,6 @@ func (s *sConsumeTrade) ProcessPay(ctx context.Context, ids string, deposit mode
 					tradeData.TradePaymentMoney, _ = big.NewFloat(trade.TradePaymentMoney).Add(big.NewFloat(trade.TradePaymentMoney), tradePaymentAmount).Float64()
 					tradeData.TradePaidTime = now.UnixMilli()
 
-					_, err := dao.ConsumeTrade.Edit(ctx, trade.ConsumeTradeId, &tradeData)
-
-					if err != nil {
-						return out, err
-					}
-
-					////不是充值订单, 订单支付完成
-					//if (StateCode::TRADE_TYPE_SHOPPING == $trade_row['trade_type_id'])
-					//{
-					//$paid_order_id_row[] = $order_id;
-					//}
-					//
-					//if (StateCode::TRADE_TYPE_XQ_BUY == $trade_row['trade_type_id'])
-					//{
-					//$paid_order_id_service_row[] = $order_id;
-					//}
-
 					depositTotalFee = depositTotalFee.Sub(depositTotalFee, tradePaymentAmount)
 				} else {
 					tradePaymentAmount = depositTotalFee
@@ -185,11 +168,6 @@ func (s *sConsumeTrade) ProcessPay(ctx context.Context, ids string, deposit mode
 					tradeData.TradePaymentAmount, _ = big.NewFloat(trade.TradePaymentAmount).Sub(big.NewFloat(trade.TradePaymentAmount), tradePaymentAmount).Float64()
 					tradeData.TradePaymentMoney, _ = big.NewFloat(trade.TradePaymentMoney).Add(big.NewFloat(trade.TradePaymentMoney), tradePaymentAmount).Float64()
 					tradeData.TradePaidTime = now.UnixMilli()
-					_, err := dao.ConsumeTrade.Edit(ctx, trade.ConsumeTradeId, &tradeData)
-
-					if err != nil {
-						return out, err
-					}
 
 					depositTotalFee = big.NewFloat(0)
 				}
@@ -198,76 +176,76 @@ func (s *sConsumeTrade) ProcessPay(ctx context.Context, ids string, deposit mode
 				//订单消费流水
 				//涉及佣金结算问题
 				if consts.TRADE_TYPE_SHOPPING == trade.TradeTypeId {
-
-					//1. 买家流水及订单扣除
-					record.RecordTitle = trade.TradeTitle
-					record.UserId = trade.BuyerId
-					record.UserNickname = ""
-					record.StoreId = trade.BuyerStoreId
-					record.ChainId = 0
-					record.TradeTypeId = trade.TradeTypeId
-					record.RecordTotal, _ = big.NewFloat(0).Sub(big.NewFloat(0), tradePaymentAmount).Float64()
-					record.RecordMoney = record.RecordTotal
-
-					_, err = dao.ConsumeRecord.Add(ctx, &record)
-
-					if err != nil {
-						return out, err
-					}
-
-					f, _ := tradePaymentAmount.Float64()
-					_, err = dao.UserResource.Decrement(ctx, trade.BuyerId, dao.UserResource.Columns().UserMoney, f)
-
-					if err != nil {
-						return out, err
-					}
-
-					//2. 卖家订单流水增加
-					record.UserId = trade.SellerId
-					record.UserNickname = ""
-					record.StoreId = trade.StoreId
-					record.ChainId = trade.ChainId
-					record.TradeTypeId = consts.TRADE_TYPE_SALES
-					record.PaymentTypeId = deposit.PaymentTypeId
-					record.PaymentChannelId = deposit.PaymentChannelId
-					record.RecordTotal, _ = tradePaymentAmount.Float64()
-
-					//卖家收益涉及佣金问题， 可以分多次付款，支付完成才扣佣金
-					if tradeData.TradeIsPaid == consts.ORDER_PAID_STATE_YES {
-						//卖家收益，进入冻结中?
-						if consts.PAYMENT_TYPE_OFFLINE == deposit.PaymentTypeId {
-							record.RecordMoney = record.RecordTotal //佣金平台获取。 是否需要加入一个统计字段中？
-							record.RecordCommissionFee = 0
-						} else {
-							record.RecordMoney, _ = big.NewFloat(0).Sub(tradePaymentAmount, big.NewFloat(trade.OrderCommissionFee)).Float64() //佣金平台获取。 是否需要加入一个统计字段中？
-							record.RecordCommissionFee = trade.OrderCommissionFee                                                             //佣金平台获取
-
-							//平台佣金总额
-							//$plantform_resource_row = array();
-							//$plantform_resource_row['plantform_resource_id'] = DATA_ID;
-							//$plantform_resource_row['plantform_commission_fee'] = $trade_row['order_commission_fee'];
-							//$flag_row[] = Plantform_ResourceModel::getInstance()->save($plantform_resource_row, true, true);
-
-						}
-					} else {
-						record.RecordMoney, _ = tradePaymentAmount.Float64()
-					}
-
-					_, err = dao.ConsumeRecord.Add(ctx, &record)
-
-					if err != nil {
-						return out, err
-					}
-
-					//卖家收益，进入冻结中?
-					if consts.PAYMENT_TYPE_OFFLINE == deposit.PaymentTypeId {
-						//线下支付，需要扣除商家交易佣金？
-					} else {
-						_, err = dao.UserResource.Increment(ctx, trade.SellerId, dao.UserResource.Columns().UserMoney, record.RecordMoney)
-						if err != nil {
-							return out, err
-						}
-					}
+					//
+					////1. 买家流水及订单扣除
+					//record.RecordTitle = trade.TradeTitle
+					//record.UserId = trade.BuyerId
+					//record.UserNickname = ""
+					//record.StoreId = trade.BuyerStoreId
+					//record.ChainId = 0
+					//record.TradeTypeId = trade.TradeTypeId
+					//record.RecordTotal, _ = big.NewFloat(0).Sub(big.NewFloat(0), tradePaymentAmount).Float64()
+					//record.RecordMoney = record.RecordTotal
+					//
+					//_, err = dao.ConsumeRecord.Add(ctx, &record)
+					//
+					//if err != nil {
+					//	return out, err
+					//}
+					//
+					//f, _ := tradePaymentAmount.Float64()
+					//_, err = dao.UserResource.Decrement(ctx, trade.BuyerId, dao.UserResource.Columns().UserMoney, f)
+					//
+					//if err != nil {
+					//	return out, err
+					//}
+					//
+					////2. 卖家订单流水增加
+					//record.UserId = trade.SellerId
+					//record.UserNickname = ""
+					//record.StoreId = trade.StoreId
+					//record.ChainId = trade.ChainId
+					//record.TradeTypeId = consts.TRADE_TYPE_SALES
+					//record.PaymentTypeId = deposit.PaymentTypeId
+					//record.PaymentChannelId = deposit.PaymentChannelId
+					//record.RecordTotal, _ = tradePaymentAmount.Float64()
+					//
+					////卖家收益涉及佣金问题， 可以分多次付款，支付完成才扣佣金
+					//if tradeData.TradeIsPaid == consts.ORDER_PAID_STATE_YES {
+					//	//卖家收益，进入冻结中?
+					//	if consts.PAYMENT_TYPE_OFFLINE == deposit.PaymentTypeId {
+					//		record.RecordMoney = record.RecordTotal //佣金平台获取。 是否需要加入一个统计字段中？
+					//		record.RecordCommissionFee = 0
+					//	} else {
+					//		record.RecordMoney, _ = big.NewFloat(0).Sub(tradePaymentAmount, big.NewFloat(trade.OrderCommissionFee)).Float64() //佣金平台获取。 是否需要加入一个统计字段中？
+					//		record.RecordCommissionFee = trade.OrderCommissionFee                                                             //佣金平台获取
+					//
+					//		//平台佣金总额
+					//		//$plantform_resource_row = array();
+					//		//$plantform_resource_row['plantform_resource_id'] = DATA_ID;
+					//		//$plantform_resource_row['plantform_commission_fee'] = $trade_row['order_commission_fee'];
+					//		//$flag_row[] = Plantform_ResourceModel::getInstance()->save($plantform_resource_row, true, true);
+					//
+					//	}
+					//} else {
+					//	record.RecordMoney, _ = tradePaymentAmount.Float64()
+					//}
+					//
+					//_, err = dao.ConsumeRecord.Add(ctx, &record)
+					//
+					//if err != nil {
+					//	return out, err
+					//}
+					//
+					////卖家收益，进入冻结中?
+					//if consts.PAYMENT_TYPE_OFFLINE == deposit.PaymentTypeId {
+					//	//线下支付，需要扣除商家交易佣金？
+					//} else {
+					//	_, err = dao.UserResource.Increment(ctx, trade.SellerId, dao.UserResource.Columns().UserMoney, record.RecordMoney)
+					//	if err != nil {
+					//		return out, err
+					//	}
+					//}
 				}
 			} else {
 				tradeData.TradeIsPaid = consts.ORDER_PAID_STATE_YES
@@ -281,7 +259,7 @@ func (s *sConsumeTrade) ProcessPay(ctx context.Context, ids string, deposit mode
 				orderInfo, _ := dao.OrderInfo.Get(ctx, orderId)
 
 				if orderInfo.OrderStateId == consts.ORDER_STATE_WAIT_PAY {
-					_, err = service.Order().SetPaidYes(ctx, orderId)
+					_, err = service.Order().SetPaidYes(ctx, orderInfo)
 					if err != nil {
 						return out, err
 					}
@@ -293,7 +271,7 @@ func (s *sConsumeTrade) ProcessPay(ctx context.Context, ids string, deposit mode
 
 					//判断是否线下支付
 					if consts.PAYMENT_TYPE_OFFLINE == deposit.PaymentTypeId {
-                        //直接处理订单支付状态， 不处理订单状态
+						//直接处理订单支付状态， 不处理订单状态
 						_, err = dao.OrderInfo.Edit(ctx, orderId, &do.OrderInfo{OrderIsPaid: consts.ORDER_PAID_STATE_YES})
 
 						if err != nil {
@@ -302,7 +280,7 @@ func (s *sConsumeTrade) ProcessPay(ctx context.Context, ids string, deposit mode
 
 						out.Paid = true
 					} else {
-						_, err = service.Order().SetPaidYes(ctx, orderId)
+						_, err = service.Order().SetPaidYes(ctx, orderInfo)
 						if err != nil {
 							return out, err
 						}

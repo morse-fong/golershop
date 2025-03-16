@@ -38,6 +38,7 @@ import (
 	"golershop.cn/internal/service"
 	"golershop.cn/utility"
 	"golershop.cn/utility/array"
+	kafkautil "golershop.cn/utility/kafka"
 	"golershop.cn/utility/log"
 	"regexp"
 	"sort"
@@ -657,6 +658,8 @@ func (s *sConfigBase) Init(ctx context.Context) (res bool, err error) {
 	if err := utility.InitSnowflake(ctx); err != nil {
 		return false, err
 	}
+
+	kafkautil.InitKafka(ctx)
 
 	//初始化  initOrderProcess
 	_, err = s.initOrderProcess(ctx)

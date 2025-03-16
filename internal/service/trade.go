@@ -209,7 +209,7 @@ type (
 		 * @param orderId 订单编号
 		 * @return 是否支付成功
 		 */
-		SetPaidYes(ctx context.Context, orderId string) (flag bool, err error)
+		SetPaidYes(ctx context.Context, orderInfo *entity.OrderInfo) (flag bool, err error)
 		// Review 审核订单
 		Review(ctx context.Context, orderId string, orderStateNote string) (flag bool, err error)
 		// Finance 财务审核
@@ -380,21 +380,21 @@ type (
 )
 
 var (
-	localOrder                 IOrder
-	localOrderBase             IOrderBase
-	localOrderInfo             IOrderInfo
-	localOrderLogistics        IOrderLogistics
-	localOrderReturn           IOrderReturn
-	localOrderReturnItem       IOrderReturnItem
-	localOrderStateLog         IOrderStateLog
-	localUserCart              IUserCart
-	localOrderDeliveryAddress  IOrderDeliveryAddress
-	localOrderInvoice          IOrderInvoice
-	localOrderItem             IOrderItem
-	localOrderComment          IOrderComment
-	localStockBill             IStockBill
-	localOrderData             IOrderData
-	localOrderReturnReason     IOrderReturnReason
+	localOrder                IOrder
+	localOrderBase            IOrderBase
+	localOrderInfo            IOrderInfo
+	localOrderLogistics       IOrderLogistics
+	localOrderReturn          IOrderReturn
+	localOrderReturnItem      IOrderReturnItem
+	localOrderStateLog        IOrderStateLog
+	localUserCart             IUserCart
+	localOrderDeliveryAddress IOrderDeliveryAddress
+	localOrderInvoice         IOrderInvoice
+	localOrderItem            IOrderItem
+	localOrderComment         IOrderComment
+	localStockBill            IStockBill
+	localOrderData            IOrderData
+	localOrderReturnReason    IOrderReturnReason
 )
 
 func OrderDeliveryAddress() IOrderDeliveryAddress {

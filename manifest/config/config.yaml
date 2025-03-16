@@ -169,7 +169,13 @@ redis:
     maxIdle: "8"  # 允许闲置的最大连接数(0表示不限制)
     maxActive: "16" # 最大连接数量限制(0表示不限制)
     idleTimeout: "30m"  # 连接最大空闲时间，使用时间字符串例如30s/1m/1d
-
+  # 订单专用配置
+  order:
+    address: "192.168.1.100:6379"
+    db: 0
+    maxRetries: 3
+    readTimeout: "3s"
+    writeTimeout: "3s"
   # 单实例配置示例2
   cache:
     address: 127.0.0.1:6379
@@ -201,6 +207,11 @@ jwt:
   # 刷新时间 单位minutes
   tokenRefreshTtl: 20160
 
+kafka:
+  brokers:
+    - "127.0.0.1:9092"
+    - "127.0.0.1:9092"
+  topic: "order_async_persist"
 
 secure:
   publicKey: "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDBT2vr+dhZElF73FJ6xiP181txKWUSNLPQQlid6DUJhGAOZblluafIdLmnUyKE8mMHhT3R+Ib3ssZcJku6Hn72yHYj/qPkCGFv0eFo7G+GJfDIUeDyalBN0QsuiE/XzPHJBuJDfRArOiWvH0BXOv5kpeXSXM8yTt5Na1jAYSiQ/wIDAQAB"

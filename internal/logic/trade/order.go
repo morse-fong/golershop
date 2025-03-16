@@ -374,7 +374,7 @@ func (s *sOrder) Add(ctx context.Context, in *model.CheckoutInput) (out *model.O
 // Add 新增
 func (s *sOrder) addOrder(ctx context.Context, cartData *model.CheckoutOutput) (out *model.OrderAddOutput, err error) {
 	now := gtime.Now()
-
+	wg := sync.WaitGroup{}
 	userId := cartData.UserId
 	buyerUserNickname := cartData.In.UserNickname
 	gbId := cartData.In.GbId
@@ -382,85 +382,85 @@ func (s *sOrder) addOrder(ctx context.Context, cartData *model.CheckoutOutput) (
 
 	orderSelMoneyAmount := decimal.NewFromInt(0)
 	orderSelPointsAmount := decimal.NewFromInt(0)
-	orderSelSpAmount := decimal.NewFromInt(0)
+	//orderSelSpAmount := decimal.NewFromInt(0)
 
-	orderNeedPayPointsAmount := decimal.NewFromFloat(cartData.OrderPointsAmount)
+	//orderNeedPayPointsAmount := decimal.NewFromFloat(cartData.OrderPointsAmount)
 	orderResourceExt1 := decimal.NewFromInt(0)
 	orderResourceExt1Use := decimal.NewFromInt(0)
 
-	userResource, _ := service.UserResource().Get(ctx, cartData.UserId)
+	//userResource, _ := service.UserResource().Get(ctx, cartData.UserId)
 	var orderIdRow []string
 
 	usePoint := false
-	if !g.IsEmpty(orderNeedPayPointsAmount) {
-		orderResourceExt1 = orderNeedPayPointsAmount
-
-		if userResource != nil {
-			userPoints := decimal.NewFromFloat(userResource.UserPoints)
-
-			if userPoints.Cmp(orderNeedPayPointsAmount) >= 0 {
-				orderResourceExt1Use = orderResourceExt1
-			} else {
-				pointsVaueRate := decimal.NewFromFloat(service.ConfigBase().GetFloat(ctx, "points_vaue_rate", 0))
-
-				if pointsVaueRate.Cmp(decimal.NewFromFloat(0)) <= 0 {
-					orderResourceExt1Use = decimal.NewFromInt(0)
-					panic(errors.New("积分价值配置有误，无法下单！"))
-				} else {
-					orderResourceExt1Use = userPoints
-				}
-			}
-		}
-
-		if orderResourceExt1Use.Cmp(decimal.NewFromInt(0)) >= 0 {
-			desc := fmt.Sprintf("%s 积分兑换", orderResourceExt1Use)
-
-			pts, _ := orderResourceExt1Use.Neg().Float64()
-
-			pointsVo := &model.UserPointsVo{
-				UserId:        cartData.UserId,
-				Points:        pts,
-				PointsTypeId:  consts.POINTS_TYPE_EXCHANGE_PRODUCT,
-				PointsLogDesc: desc,
-			}
-
-			_, err = service.UserResource().Points(ctx, pointsVo)
-
-			if err != nil {
-				panic(errors.New("积分操作失败！"))
-			}
-
-			usePoint = true
-		}
-	}
-
-	orderNeedSpAmount := decimal.NewFromFloat(cartData.OrderSpAmount)
-	orderResourceExt2 := decimal.NewFromInt(0)
-	orderResourceExt2Use := decimal.NewFromInt(0)
-
-	if !g.IsEmpty(orderNeedSpAmount) {
-		orderResourceExt2 = orderNeedSpAmount
-
-		userSpTotal := decimal.NewFromFloat(userResource.UserSp)
-		if userSpTotal.Cmp(orderNeedSpAmount) >= 0 {
-			orderResourceExt2Use = orderResourceExt2
-		} else {
-			spVaueRate := decimal.NewFromFloat(service.ConfigBase().GetFloat(ctx, "sp_vaue_rate", 0))
-
-			if spVaueRate.Cmp(decimal.NewFromFloat(0)) <= 0 {
-				orderResourceExt2Use = decimal.NewFromInt(0)
-				panic(errors.New("积分2不足，无法下单！"))
-			} else {
-				orderResourceExt2Use = userSpTotal
-			}
-
-			// 扣除众宝
-			if !orderResourceExt2Use.IsZero() {
-				//desc := fmt.Sprintf("%s 众宝兑换", orderResourceExt2Use);
-				// todo User_ResourceModel::sp
-			}
-		}
-	}
+	//if !g.IsEmpty(orderNeedPayPointsAmount) {
+	//	orderResourceExt1 = orderNeedPayPointsAmount
+	//
+	//	if userResource != nil {
+	//		userPoints := decimal.NewFromFloat(userResource.UserPoints)
+	//
+	//		if userPoints.Cmp(orderNeedPayPointsAmount) >= 0 {
+	//			orderResourceExt1Use = orderResourceExt1
+	//		} else {
+	//			pointsVaueRate := decimal.NewFromFloat(service.ConfigBase().GetFloat(ctx, "points_vaue_rate", 0))
+	//
+	//			if pointsVaueRate.Cmp(decimal.NewFromFloat(0)) <= 0 {
+	//				orderResourceExt1Use = decimal.NewFromInt(0)
+	//				panic(errors.New("积分价值配置有误，无法下单！"))
+	//			} else {
+	//				orderResourceExt1Use = userPoints
+	//			}
+	//		}
+	//	}
+	//
+	//	if orderResourceExt1Use.Cmp(decimal.NewFromInt(0)) >= 0 {
+	//		desc := fmt.Sprintf("%s 积分兑换", orderResourceExt1Use)
+	//
+	//		pts, _ := orderResourceExt1Use.Neg().Float64()
+	//
+	//		pointsVo := &model.UserPointsVo{
+	//			UserId:        cartData.UserId,
+	//			Points:        pts,
+	//			PointsTypeId:  consts.POINTS_TYPE_EXCHANGE_PRODUCT,
+	//			PointsLogDesc: desc,
+	//		}
+	//
+	//		_, err = service.UserResource().Points(ctx, pointsVo)
+	//
+	//		if err != nil {
+	//			panic(errors.New("积分操作失败！"))
+	//		}
+	//
+	//		usePoint = true
+	//	}
+	//}
+	//
+	//orderNeedSpAmount := decimal.NewFromFloat(cartData.OrderSpAmount)
+	//orderResourceExt2 := decimal.NewFromInt(0)
+	//orderResourceExt2Use := decimal.NewFromInt(0)
+	//
+	//if !g.IsEmpty(orderNeedSpAmount) {
+	//	orderResourceExt2 = orderNeedSpAmount
+	//
+	//	userSpTotal := decimal.NewFromFloat(userResource.UserSp)
+	//	if userSpTotal.Cmp(orderNeedSpAmount) >= 0 {
+	//		orderResourceExt2Use = orderResourceExt2
+	//	} else {
+	//		spVaueRate := decimal.NewFromFloat(service.ConfigBase().GetFloat(ctx, "sp_vaue_rate", 0))
+	//
+	//		if spVaueRate.Cmp(decimal.NewFromFloat(0)) <= 0 {
+	//			orderResourceExt2Use = decimal.NewFromInt(0)
+	//			panic(errors.New("积分2不足，无法下单！"))
+	//		} else {
+	//			orderResourceExt2Use = userSpTotal
+	//		}
+	//
+	//		// 扣除众宝
+	//		if !orderResourceExt2Use.IsZero() {
+	//			//desc := fmt.Sprintf("%s 众宝兑换", orderResourceExt2Use);
+	//			// todo User_ResourceModel::sp
+	//		}
+	//	}
+	//}
 
 	var cartIds []uint64
 	orderIdRow = make([]string, 0)
@@ -757,7 +757,7 @@ func (s *sOrder) addOrder(ctx context.Context, cartData *model.CheckoutOutput) (
 			// 修改最终下单数据
 			orderSelMoneyAmount = orderSelMoneyAmount.Add(orderPaymentAmount)
 			orderSelPointsAmount = orderSelPointsAmount.Add(orderResourceExt1UseCurrent)
-			orderSelSpAmount = orderSelSpAmount.Add(orderResourceExt2)
+			//orderSelSpAmount = orderSelSpAmount.Add(orderResourceExt2)
 
 			// 应付金额/应支付金额:order_goods_amount - order_discount_amount + order_shipping_fee - order_voucher_price - order_points_fee - order_adjust_fee
 			// 手工调整默认为0，order_points_fee积分折扣暂未开启
@@ -769,7 +769,11 @@ func (s *sOrder) addOrder(ctx context.Context, cartData *model.CheckoutOutput) (
 			orderBase.UserNickname = buyerUserNickname
 
 			// 订单基础信息保存
-			_, err = service.OrderBase().Add(ctx, orderBase)
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				service.OrderBase().Add(ctx, orderBase)
+			}()
 
 			deliveryTypeId := checkoutRow.DeliveryTypeId
 
@@ -847,9 +851,11 @@ func (s *sOrder) addOrder(ctx context.Context, cartData *model.CheckoutOutput) (
 				}
 
 				// 订单基本info信息保存
-				if _, err = service.OrderInfo().Add(ctx, orderInfo); err != nil {
-					panic("保存订单基础数据失败!")
-				}
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					service.OrderInfo().Add(ctx, orderInfo)
+				}()
 			} else {
 				panic(err)
 				panic(errors.New("保存订单基础数据失败！"))
@@ -982,9 +988,11 @@ func (s *sOrder) addOrder(ctx context.Context, cartData *model.CheckoutOutput) (
 				}
 
 				// 保存订单信息数据
-				if _, err = service.OrderItem().Saves(ctx, itemRows); err != nil {
-					panic("保存订单信息数据失败!")
-				}
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					service.OrderItem().Saves(ctx, itemRows)
+				}()
 
 				orderData := &do.OrderData{}
 
@@ -1019,9 +1027,11 @@ func (s *sOrder) addOrder(ctx context.Context, cartData *model.CheckoutOutput) (
 				orderData.OrderCommissionFee = orderCommissionFee
 
 				// 保存订单数据
-				if _, err = service.OrderData().Add(ctx, orderData); err != nil {
-					panic("保存订单数据失败!")
-				}
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					service.OrderData().Add(ctx, orderData)
+				}()
 
 				if !g.IsEmpty(checkoutRow.UserInvoiceId) {
 					userInvoice, err := service.UserInvoice().Get(ctx, checkoutRow.UserInvoiceId)
@@ -1049,9 +1059,11 @@ func (s *sOrder) addOrder(ctx context.Context, cartData *model.CheckoutOutput) (
 
 						orderInvoice.InvoiceContactName = userInvoice.InvoiceContactName
 
-						if _, err := service.OrderInvoice().Add(ctx, orderInvoice); err != nil {
-							panic("保存订单发票信息数据失败!")
-						}
+						wg.Add(1)
+						go func() {
+							defer wg.Done()
+							service.OrderInvoice().Add(ctx, orderInvoice)
+						}()
 					}
 				}
 			}
@@ -1114,11 +1126,11 @@ func (s *sOrder) addOrder(ctx context.Context, cartData *model.CheckoutOutput) (
 				if orderPaymentAmount.(decimal.Decimal).Cmp(decimal.Zero) <= 0 {
 					// 订单付款状态处理，
 					// 不需要添加收款记录，直接修改订单状态
-					if _, err := s.SetPaidYes(ctx, orderId); err != nil {
-						panic("订单支付状态修改失败!")
-					} else {
-						cartData.IsPaid = true
-					}
+					//if _, err := s.SetPaidYes(ctx, orderInfo); err != nil {
+					//	panic("订单支付状态修改失败!")
+					//} else {
+					//	cartData.IsPaid = true
+					//}
 				}
 
 				if len(cartIds) > 0 {
@@ -1135,7 +1147,7 @@ func (s *sOrder) addOrder(ctx context.Context, cartData *model.CheckoutOutput) (
 
 	cartData.OrderMoneyAmount, _ = orderSelMoneyAmount.Float64()
 	cartData.OrderPointsAmount, _ = orderSelPointsAmount.Float64()
-	cartData.OrderSpAmount, _ = orderSelSpAmount.Float64()
+	//cartData.OrderSpAmount, _ = orderSelSpAmount.Float64()
 
 	orderAddOutput := &model.OrderAddOutput{
 		CheckoutOutput: *cartData,
@@ -1143,6 +1155,7 @@ func (s *sOrder) addOrder(ctx context.Context, cartData *model.CheckoutOutput) (
 		GbId:           gbId,
 		// 其他属性赋值...
 	}
+	wg.Wait()
 
 	return orderAddOutput, err
 }
@@ -1345,27 +1358,18 @@ func (s *sOrder) Cancel(ctx context.Context, orderId string, orderStateNote stri
  * @param orderId 订单编号
  * @return 是否支付成功
  */
-func (s *sOrder) SetPaidYes(ctx context.Context, orderId string) (flag bool, err error) {
+func (s *sOrder) SetPaidYes(ctx context.Context, orderInfo *entity.OrderInfo) (flag bool, err error) {
 	flag = false
-	orderInfo, err := service.OrderInfo().Get(ctx, orderId)
+	orderId := orderInfo.OrderId
+	//orderBase, err := service.OrderBase().Get(ctx, orderId)
 
-	if err != nil {
-		return false, err
-	}
+	//if err != nil {
+	//	return false, err
+	//}
 
-	if orderInfo == nil {
-		panic(fmt.Sprintf("订单信息 %s 不存在!", orderId))
-	}
-
-	orderBase, err := service.OrderBase().Get(ctx, orderId)
-
-	if err != nil {
-		return false, err
-	}
-
-	if orderBase == nil {
-		panic(fmt.Sprintf("订单基础 %s 不存在!", orderId))
-	}
+	//if orderBase == nil {
+	//	panic(fmt.Sprintf("订单基础 %s 不存在!", orderId))
+	//}
 
 	if orderInfo.OrderStateId == consts.ORDER_STATE_WAIT_PAY && orderInfo.OrderIsPaid != consts.ORDER_PAID_STATE_YES {
 		//库存是否足够
@@ -1395,31 +1399,34 @@ func (s *sOrder) SetPaidYes(ctx context.Context, orderId string) (flag bool, err
 		}
 
 		//获取订单的下一条状态
-		nextOrderStateId, err := s.getNextOrderStateId(ctx, orderInfo.OrderStateId)
-
-		flag, err = s.EditNextState(ctx, orderId, orderInfo.OrderStateId, nextOrderStateId, "")
+		//nextOrderStateId, err := s.getNextOrderStateId(ctx, orderInfo.OrderStateId)
+		//
+		//flag, err = s.EditNextState(ctx, orderId, orderInfo.OrderStateId, nextOrderStateId, "")
+		//
+		//if err != nil {
+		//	return false, err
+		//}
+		//_, err = dao.OrderBase.Edit(ctx, do.OrderBase{OrderId: orderId, OrderStateId: orderInfo.OrderStateId}, &do.OrderBase{OrderStateId: nextOrderStateId})
+		//_, err = dao.OrderInfo.Edit(ctx, do.OrderInfo{OrderId: orderId, OrderStateId: consts.ORDER_STATE_WAIT_PAY}, &do.OrderInfo{OrderIsPaid: consts.ORDER_PAID_STATE_YES, OrderStateId: consts.ORDER_STATE_PICKING})
+		//err = order.ProcessAsync(ctx, orderId, orderInfo)
 
 		if err != nil {
 			return false, err
 		}
-
-		//更新支付状态
-		_, err = dao.OrderInfo.Edit(ctx, do.OrderInfo{OrderId: orderId}, &do.OrderInfo{OrderIsPaid: consts.ORDER_PAID_STATE_YES})
-
 		//更新发票订单支付状态
-		queryWrapper := &do.OrderInvoiceListInput{
-			Where: do.OrderInvoice{OrderId: orderId},
-		}
-
-		orderInvoice := &do.OrderInvoice{OrderIsPaid: true}
-		dao.OrderInvoice.EditWhere(ctx, queryWrapper, orderInvoice)
+		//queryWrapper := &do.OrderInvoiceListInput{
+		//	Where: do.OrderInvoice{OrderId: orderId},
+		//}
+		//
+		//orderInvoice := &do.OrderInvoice{OrderIsPaid: true}
+		//dao.OrderInvoice.EditWhere(ctx, queryWrapper, orderInvoice)
 
 		// 读取订单商品，更新销量
-		for _, orderItem := range orderItemList {
-			productId := orderItem.ProductId
-			orderItemQuantity := orderItem.OrderItemQuantity
-			dao.ProductIndex.Increment(ctx, productId, dao.ProductIndex.Columns().ProductSaleNum, orderItemQuantity)
-		}
+		//for _, orderItem := range orderItemList {
+		//	productId := orderItem.ProductId
+		//	orderItemQuantity := orderItem.OrderItemQuantity
+		//	dao.ProductIndex.Increment(ctx, productId, dao.ProductIndex.Columns().ProductSaleNum, orderItemQuantity)
+		//}
 
 		//// 付款成功，对用户进行提醒
 		//messageId := "payment-success-reminding"

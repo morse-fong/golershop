@@ -3,6 +3,7 @@ module golershop.cn
 go 1.18
 
 require (
+	github.com/ArtisanCloud/PowerWeChat/v3 v3.2.26
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/farmerx/gorsa v0.0.0-20161211100049-3ae06f674f40
 	github.com/go-pay/gopay v1.5.100
@@ -17,6 +18,7 @@ require (
 	github.com/mileusna/useragent v1.3.4
 	github.com/mojocn/base64Captcha v1.3.5
 	github.com/nyaruka/phonenumbers v1.3.5
+	github.com/segmentio/kafka-go v0.4.47
 	github.com/shopspring/decimal v1.3.1
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )
@@ -24,7 +26,6 @@ require (
 require (
 	github.com/ArtisanCloud/PowerLibs/v3 v3.2.3 // indirect
 	github.com/ArtisanCloud/PowerSocialite/v3 v3.0.7 // indirect
-	github.com/ArtisanCloud/PowerWeChat/v3 v3.2.26 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/clbanning/mxj/v2 v2.7.0 // indirect
@@ -43,12 +44,14 @@ require (
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/grokify/html-strip-tags-go v0.0.1 // indirect
+	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
+	github.com/pierrec/lz4/v4 v4.1.15 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/redis/go-redis/v9 v9.6.1 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
